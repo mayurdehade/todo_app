@@ -23,11 +23,6 @@ public class TaskServiceImpl implements TaskService {
 		return taskDao.getAllTask();
 	}
 
-//	@Override
-//	public List<Task> getTaskByStatus(int status) {
-//		return taskDao.getTaskByStatus(status);
-//	}
-
 	@Override
 	public void addTask(Task task) {
 		taskDao.addTask(task);
@@ -42,9 +37,9 @@ public class TaskServiceImpl implements TaskService {
 	public void deleteTask(int id) {
 		taskDao.deleteTask(id);
 	}
-	
+
 	public Task getTaskById(int id) {
-	    return taskDao.findById(id);
+		return taskDao.findById(id);
 	}
 
 }

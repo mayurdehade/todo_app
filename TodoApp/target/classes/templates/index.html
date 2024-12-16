@@ -11,10 +11,6 @@
 			padding-top: 80px;
 		}
 
-		.main-card {
-			height: 100vh;
-		}
-
 		.action-btn {
 			display: flex;
 			gap: 10px;
@@ -63,58 +59,71 @@
 			padding-left: 30px;
 			font-size: 25px;
 		}
+
+		#checkboxLabel {
+			font-size: 15px;
+			font-weight: normal;
+		}
+
+		.error {
+			color: red;
+			display: none;
+			padding-bottom: 5px;
+		}
 	</style>
 	<title>Todo Web App</title>
 </head>
 
 <body>
-	<div id="todo-list">
-		<div class="card main-card">
-			<div class="nav-container">
-				<h5 class="mb-0 text-center">To-Do List</h5>
-				<div class="search-box-div">
-					<input class="form-control" id="searchBox" type="text" placeholder="Search..">
-					<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModel">
-						Add Task
-					</button>
-				</div>
-			</div>
-			<div class="card-body card-body-div" data-mdb-perfect-scrollbar="true">
-				<div class="container">
-					<table class="table">
-						<thead>
-							<tr>
-								<th scope="col" class="task-name-col">Task Name</th>
-								<th scope="col" class="task-status-col">Status</th>
-								<th scope="col" class="task-date-col">Start Date</th>
-								<th scope="col" class="task-date-col">Due Date</th>
-								<th scope="col" class="task-action-col">Action</th>
-							</tr>
-						</thead>
-						<tbody id="myTable">
-							<tr th:each="task : ${allTasks}">
-								<td scope="row" th:text="${task.task_name}" class="task-name"></td>
-								<td th:switch="${task.task_status}">
-									<span th:case="0">New</span>
-									<span th:case="1">Under Process</span>
-									<span th:case="2">Completed</span>
-								</td>
-								<td th:text="${task.start_date}"></td>
-								<td th:text="${task.due_date}"></td>
-								<td class="task action-btn">
-									<button type="button" class="btn btn-primary edit-task-btn"
-										th:attr="data-task-id=${task.task_id}" data-bs-toggle="modal"
-										data-bs-target="#editTaskModel">Edit</button>
-									<form th:action="@{/delete/{id}(id=${task.task_id})}" method="post">
-										<button type="submit" class="btn btn-danger">Delete</button>
-									</form>
-								</td>
-							</tr>
-						</tbody>
-					</table>
-				</div>
+	<div class="card main-card">
+		<div class="nav-container">
+			<h5 class="mb-0 text-center">To-Do Web App</h5>
+			<div class="search-box-div">
+				<input class="form-control" id="searchBox" type="text" placeholder="Search Task..">
+				<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModel">
+					Add Task
+				</button>
 			</div>
 		</div>
+		<div class="card-body card-body-div" data-mdb-perfect-scrollbar="true">
+			<div class="container">
+				<table class="table">
+					<thead>
+						<tr>
+							<th scope="col" class="task-name-col">Task Name
+								<input type="checkbox" id="validCheckbox" />
+								<label for="validUniqueCheckbox" id="checkboxLabel">Show Unique</label>
+							</th>
+							<th scope="col" class="task-status-col">Status</th>
+							<th scope="col" class="task-date-col">Start Date</th>
+							<th scope="col" class="task-date-col">Due Date</th>
+							<th scope="col" class="task-action-col">Action</th>
+						</tr>
+					</thead>
+					<tbody id="myTable">
+						<tr th:each="task : ${allTasks}">
+							<td scope="row" th:text="${task.task_name}" class="task-name"></td>
+							<td th:switch="${task.task_status}">
+								<span th:case="0">New</span>
+								<span th:case="1">Under Process</span>
+								<span th:case="2">Completed</span>
+							</td>
+							<td th:text="${task.start_date}"></td>
+							<td th:text="${task.due_date}"></td>
+							<td class="task action-btn">
+								<button type="button" class="btn btn-primary edit-task-btn"
+									th:attr="data-task-id=${task.task_id}" data-bs-toggle="modal"
+									data-bs-target="#editTaskModel">Edit</button>
+								<form th:action="@{/delete/{id}(id=${task.task_id})}" method="post">
+									<button type="submit" class="btn btn-danger">Delete</button>
+								</form>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</div>
 
 	</div>
 	</div>
@@ -130,10 +139,15 @@
 				</div>
 				<div class="modal-body p-4">
 					<form th:action="@{/add}" method="post">
+
 						<div data-mdb-input-init class="form-outline mb-4">
 							<label class="form-label" for="taskName">Task Name: </label>
 							<input type="text" id="taskName" name="task_name" class="form-control" required />
+							<div class="invalid-feedback" id="invalid_name">
+								Task Name should not be empty or spaces only.
+							</div>
 						</div>
+
 
 						<div data-mdb-input-init class="form-outline mb-4">
 							<label class="form-label" for="taskStatus">Status</label>
@@ -153,6 +167,8 @@
 							<input type="date" id="due-date" class="form-control" name="due_date" required />
 						</div>
 
+						<div class="error" id="dateError1">Start Date must be less than or equal to Due Date.</div>
+
 						<button type="submit" data-mdb-button-init data-mdb-ripple-init
 							class="btn btn-primary btn-block">Add Task</button>
 					</form>
@@ -171,15 +187,19 @@
 				</div>
 				<div class="modal-body p-4">
 					<form method="post" id="editTaskForm">
-						<div data-mdb-input-init class="form-outline mb-4">
-							<label class="form-label" for="task-name">Task Name: </label>
-							<input type="text" id="task-name" class="form-control" name="task_name" />
-						</div>
 
 						<div data-mdb-input-init class="form-outline mb-4">
-							<label class="form-label" for="password1">Status</label>
-							<select class="form-select" id="task-status" name="task_status"
-								aria-label="Default select example">
+							<label class="form-label" for="task-name">Task Name: </label>
+							<input type="text" id="task-name" name="task_name" class="form-control" required />
+							<div class="invalid-feedback" id="invalid_name2">
+								Task Name should not be empty or spaces only.
+							</div>
+						</div>
+
+
+						<div data-mdb-input-init class="form-outline mb-4">
+							<label class="form-label">Status</label>
+							<select class="form-select" id="task-status" name="task_status">
 								<option value="0">New</option>
 								<option value="1">Under Process</option>
 								<option value="2">Completed</option>
@@ -188,61 +208,160 @@
 
 						<div data-mdb-input-init class="form-outline mb-4">
 							<label class="form-label" for="start-date">Start Date: </label>
-							<input type="date" id="task-start-date" class="form-control" name="start_date" />
+							<input type="date" id="task-start-date" class="form-control" name="start_date" required />
 						</div>
 
 						<div data-mdb-input-init class="form-outline mb-4">
 							<label class="form-label" for="due-date">Due Date: </label>
-							<input type="date" id="task-due-date" class="form-control" name="due_date" />
+							<input type="date" id="task-due-date" class="form-control" name="due_date" required />
 						</div>
 
-						<!-- Submit button -->
+						<div class="error" id="dateError2">Start Date must be less than or equal to Due Date.</div>
+
 						<button type="submit" data-mdb-button-init data-mdb-ripple-init
 							class="btn btn-primary btn-block">Edit Task</button>
 					</form>
 				</div>
-			</div>
 
-			<script>
-				document.addEventListener("DOMContentLoaded", () => {
-					const editButton = document.querySelectorAll(".edit-task-btn");
-					const taskNameInput = document.getElementById("task-name");
-					const taskStatusInput = document.getElementById("task-status");
-					const taskStartDateInput = document.getElementById("task-start-date");
-					const taskDueDateInput = document.getElementById("task-due-date");
-					const editTaskForm = document.getElementById("editTaskForm");
+				<script>
+					document.addEventListener("DOMContentLoaded", () => {
+						const editButton = document.querySelectorAll(".edit-task-btn");
+						const taskNameInput = document.getElementById("task-name");
+						const taskStatusInput = document.getElementById("task-status");
+						const taskStartDateInput = document.getElementById("task-start-date");
+						const taskDueDateInput = document.getElementById("task-due-date");
+						const editTaskForm = document.getElementById("editTaskForm");
 
-					editButton.forEach(button => {
-						button.addEventListener("click", () => {
-							const taskId = button.getAttribute("data-task-id");
-							console.log(taskId);
-							fetch(`/task/${taskId}`)
-								.then(response => response.json())
-								.then(task => {
-									taskNameInput.value = task.task_name;
-									taskStatusInput.value = task.task_status;
-									taskStartDateInput.value = task.start_date;
-									taskDueDateInput.value = task.due_date;
-									editTaskForm.setAttribute("action", `/update/${task.task_id}`);
-								})
-								.catch(error => console.error("Error fetching task: ", error));
+						editButton.forEach(button => {
+							button.addEventListener("click", () => {
+								const taskId = button.getAttribute("data-task-id");
+								fetch(`/task/${taskId}`)
+									.then(response => response.json())
+									.then(task => {
+										taskNameInput.value = task.task_name;
+										taskStatusInput.value = task.task_status;
+										taskStartDateInput.value = task.start_date;
+										taskDueDateInput.value = task.due_date;
+										editTaskForm.setAttribute("action", `/update/${task.task_id}`);
+									})
+									.catch(error => console.error("Error fetching task: ", error));
+							});
 						});
 					});
-				});
 
 
-				$(document).ready(function () {
-					$("#searchBox").on("keyup", function () {
-						var value = $(this).val().toLowerCase();
-						$("#myTable tr").filter(function () {
-							$(this).toggle($(this).find("td:first").text().toLowerCase().indexOf(value) > -1)
+					//table serach filter
+					$(document).ready(function () {
+						$("#searchBox").on("keyup", function () {
+							var value = $(this).val().toLowerCase();
+							$("#myTable tr").filter(function () {
+								$(this).toggle($(this).find("td:first").text().toLowerCase().indexOf(value) > -1)
+							});
 						});
 					});
-				});
-			</script>
-			<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-				integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-				crossorigin="anonymous"></script>
+
+					document.addEventListener("DOMContentLoaded", () => {
+						const addTaskForm = document.querySelector("#addTaskModel form");
+						const editTaskForm = document.querySelector("#editTaskModel form");
+						const taskNameInput = document.getElementById("taskName");
+						const invalidNameMsg = document.getElementById("invalid_name");
+						const taskDueDate = document.getElementById("due-date");
+						const taskStartDate = document.getElementById("start-date");
+						const taskStartDateInput = document.getElementById("task-start-date");
+						const taskDueDateInput = document.getElementById("task-due-date");
+						const dateError1 = document.getElementById("dateError1");
+						const dateError2 = document.getElementById("dateError2");
+
+						// Validate Add Task Form
+						addTaskForm.addEventListener("submit", (e) => {
+							if (taskNameInput.value.trim() === "") {
+								e.preventDefault();
+								invalidNameMsg.style.display = "block";
+								taskNameInput.classList.add("is-invalid");
+							} else {
+								invalidNameMsg.style.display = "none";
+								taskNameInput.classList.remove("is-invalid");
+							}
+						});
+
+						// Validate Edit Task Form
+						editTaskForm.addEventListener("submit", (e) => {
+							const taskNameEditInput = document.getElementById("task-name");
+							const invalidEditNameMsg = document.getElementById("invalid_name2");
+
+							if (taskNameEditInput.value.trim() === "") {
+								e.preventDefault();
+								invalidEditNameMsg.style.display = "block";
+								taskNameEditInput.classList.add("is-invalid");
+							} else {
+								invalidEditNameMsg.style.display = "none";
+								taskNameEditInput.classList.remove("is-invalid");
+							}
+						});
+
+
+						const validCheckbox = document.getElementById("validCheckbox");
+
+						validCheckbox.addEventListener("change", () => {
+							const rows = document.querySelectorAll("#myTable tr");
+							const taskNames = new Set();
+
+							rows.forEach(row => {
+								const taskNameCell = row.querySelector(".task-name");
+								const taskName = taskNameCell ? taskNameCell.textContent.trim() : "";
+
+								if (validCheckbox.checked) {
+									if (taskName == "" || taskNames.has(taskName)) {
+										row.style.display = "none";
+									} else {
+										taskNames.add(taskName);
+										row.style.display = "";
+									}
+								} else {
+									row.style.display = "";
+								}
+							})
+						});
+
+						//date validation
+						addTaskForm.addEventListener("submit", (event) => {
+							const isValid = validateDates(taskStartDate, taskDueDate, dateError1);
+							if (!isValid) {
+								event.preventDefault();
+							}
+						});
+
+						editTaskForm.addEventListener("submit", (event) => {
+							const isValid = validateDates(taskStartDateInput, taskDueDateInput, dateError2);
+							if (!isValid) {
+								event.preventDefault();
+							}
+						});
+
+
+
+						function validateDates(startDateInput, dueDateInput, dateError) {
+							const startDate = new Date(startDateInput.value);
+							const dueDate = new Date(dueDateInput.value);
+							if (startDate && dueDate) {
+								if (startDate > dueDate) {
+									dateError.style.display = "block";
+									return false;
+								} else {
+									dateError.style.display = "none";
+									return true;
+								}
+							}
+							dateError.style.display = "none";
+							return true;
+						}
+
+					});
+
+				</script>
+				<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+					integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+					crossorigin="anonymous"></script>
 
 </body>
 

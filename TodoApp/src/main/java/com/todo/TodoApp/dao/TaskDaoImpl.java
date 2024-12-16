@@ -27,12 +27,6 @@ public class TaskDaoImpl implements TaskDao {
 		return jdbcTemplate.query(sql, new TaskRowMapper());
 	}
 
-//	@Override
-//	public List<Task> getTaskByStatus(int status) {
-//		String sql = "SELECT * FROM tasks WHERE task_status = ?";
-//		return jdbcTemplate.query(sql, new Object[] {status}, new TaskRowMapper());
-//	}
-
 	@Override
 	public void addTask(Task task) {
 		String sql = "INSERT INTO tasks(task_name, task_status, start_date, due_date) VALUE(?, ?, ?, ?)";
@@ -42,7 +36,8 @@ public class TaskDaoImpl implements TaskDao {
 	@Override
 	public void updateTask(Task task) {
 		String sql = "UPDATE tasks SET task_name = ?, task_status = ?, start_date = ?, due_date = ? WHERE task_id = ?";
-		jdbcTemplate.update(sql, task.getTask_name(), task.getTask_status(), task.getStart_date(), task.getDue_date(), task.getTask_id());
+		jdbcTemplate.update(sql, task.getTask_name(), task.getTask_status(), task.getStart_date(), task.getDue_date(),
+				task.getTask_id());
 	}
 
 	@Override
@@ -50,11 +45,11 @@ public class TaskDaoImpl implements TaskDao {
 		String sql = "DELETE FROM tasks WHERE task_id = ?";
 		jdbcTemplate.update(sql, id);
 	}
-	
+
 	@Override
 	public Task findById(int id) {
 		String sql = "SELECT * FROM tasks WHERE task_id = ?";
-		return jdbcTemplate.queryForObject(sql, new Object[] {id}, new TaskRowMapper());
+		return jdbcTemplate.queryForObject(sql, new Object[] { id }, new TaskRowMapper());
 	}
 
 	private static class TaskRowMapper implements RowMapper<Task> {

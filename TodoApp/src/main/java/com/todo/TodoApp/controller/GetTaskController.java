@@ -10,9 +10,9 @@ import com.todo.TodoApp.service.TaskService;
 
 @RestController
 public class GetTaskController {
-	
+
 	private TaskService taskService;
-	
+
 	@Autowired
 	public GetTaskController(TaskService taskService) {
 		this.taskService = taskService;
@@ -20,6 +20,6 @@ public class GetTaskController {
 
 	@GetMapping("/task/{id}")
 	public Task getTaskById(@PathVariable int id) {
-	    return taskService.getTaskById(id);
+		return taskService.getTaskById(id);
 	}
 }
