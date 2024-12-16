@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+	<meta charset="UTF-8">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+		integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+	<style>
+		.card-body-div {
+			padding-top: 80px;
+		}
+
+		.main-card {
+			height: 100vh;
+		}
+
+		.action-btn {
+			display: flex;
+			gap: 10px;
+		}
+
+		.task-name-col {
+			width: 30%;
+		}
+
+		.task-status-col {
+			width: 13%;
+		}
+
+		.task-date-col {
+			width: 13%;
+		}
+
+		.task-action-col {
+			width: 10%;
+		}
+
+		.search-box-div {
+			display: flex;
+			justify-content: end;
+			gap: 30px;
+		}
+
+		.search-box-div input {
+			width: 80%;
+		}
+
+		.search-box-div button {
+			width: 40%;
+		}
+
+		.nav-container {
+			display: flex;
+			padding: 10px;
+			width: 100%;
+			gap: 50px;
+			background-color: rgb(240, 240, 240);
+			position: fixed;
+		}
+
+		.nav-container h5 {
+			padding-left: 30px;
+			font-size: 25px;
+		}
+	</style>
+	<title>Todo Web App</title>
+</head>
+
+<body>
+	<div id="todo-list">
+		<div class="card main-card">
+			<div class="nav-container">
+				<h5 class="mb-0 text-center">To-Do List</h5>
+				<div class="search-box-div">
+					<input class="form-control" id="searchBox" type="text" placeholder="Search..">
+					<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModel">
+						Add Task
+					</button>
+				</div>
+			</div>
+			<div class="card-body card-body-div" data-mdb-perfect-scrollbar="true">
+				<div class="container">
+					<table class="table">
+						<thead>
+							<tr>
+								<th scope="col" class="task-name-col">Task Name</th>
+								<th scope="col" class="task-status-col">Status</th>
+								<th scope="col" class="task-date-col">Start Date</th>
+								<th scope="col" class="task-date-col">Due Date</th>
+								<th scope="col" class="task-action-col">Action</th>
+							</tr>
+						</thead>
+						<tbody id="myTable">
+							<tr th:each="task : ${allTasks}">
+								<td scope="row" th:text="${task.task_name}" class="task-name"></td>
+								<td th:switch="${task.task_status}">
+									<span th:case="0">New</span>
+									<span th:case="1">Under Process</span>
+									<span th:case="2">Completed</span>
+								</td>
+								<td th:text="${task.start_date}"></td>
+								<td th:text="${task.due_date}"></td>
+								<td class="task action-btn">
+									<button type="button" class="btn btn-primary edit-task-btn"
+										th:attr="data-task-id=${task.task_id}" data-bs-toggle="modal"
+										data-bs-target="#editTaskModel">Edit</button>
+									<form th:action="@{/delete/{id}(id=${task.task_id})}" method="post">
+										<button type="submit" class="btn btn-danger">Delete</button>
+									</form>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+
+	</div>
+	</div>
+	</div>
+
+	<!-- Add Task Modal -->
+	<div class="modal fade" id="addTaskModel" tabindex="-1" aria-labelledby="addTaskModelLabel" aria-hidden="true">
+		<div class="modal-dialog d-flex justify-content-center">
+			<div class="modal-content w-75">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel1">Add Task</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body p-4">
+					<form th:action="@{/add}" method="post">
+						<div data-mdb-input-init class="form-outline mb-4">
+							<label class="form-label" for="taskName">Task Name: </label>
+							<input type="text" id="taskName" name="task_name" class="form-control" required />
+						</div>
+
+						<div data-mdb-input-init class="form-outline mb-4">
+							<label class="form-label" for="taskStatus">Status</label>
+							<select class="form-select" id="taskStatus" name="task_status">
+								<option value="0" selected>New</option>
+								<option value="1">Under Process</option>
+							</select>
+						</div>
+
+						<div data-mdb-input-init class="form-outline mb-4">
+							<label class="form-label" for="start-date">Start Date: </label>
+							<input type="date" id="start-date" class="form-control" name="start_date" required />
+						</div>
+
+						<div data-mdb-input-init class="form-outline mb-4">
+							<label class="form-label" for="due-date">Due Date: </label>
+							<input type="date" id="due-date" class="form-control" name="due_date" required />
+						</div>
+
+						<button type="submit" data-mdb-button-init data-mdb-ripple-init
+							class="btn btn-primary btn-block">Add Task</button>
+					</form>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<!-- Edit Task Model -->
+	<div class="modal fade" id="editTaskModel" tabindex="-1" aria-labelledby="editTaskModalLabel" aria-hidden="true">
+		<div class="modal-dialog d-flex justify-content-center">
+			<div class="modal-content w-75">
+				<div class="modal-header">
+					<h5 class="modal-title" id="exampleModalLabel1">Edit Task</h5>
+					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+				</div>
+				<div class="modal-body p-4">
+					<form method="post" id="editTaskForm">
+						<div data-mdb-input-init class="form-outline mb-4">
+							<label class="form-label" for="task-name">Task Name: </label>
+							<input type="text" id="task-name" class="form-control" name="task_name" />
+						</div>
+
+						<div data-mdb-input-init class="form-outline mb-4">
+							<label class="form-label" for="password1">Status</label>
+							<select class="form-select" id="task-status" name="task_status"
+								aria-label="Default select example">
+								<option value="0">New</option>
+								<option value="1">Under Process</option>
+								<option value="2">Completed</option>
+							</select>
+						</div>
+
+						<div data-mdb-input-init class="form-outline mb-4">
+							<label class="form-label" for="start-date">Start Date: </label>
+							<input type="date" id="task-start-date" class="form-control" name="start_date" />
+						</div>
+
+						<div data-mdb-input-init class="form-outline mb-4">
+							<label class="form-label" for="due-date">Due Date: </label>
+							<input type="date" id="task-due-date" class="form-control" name="due_date" />
+						</div>
+
+						<!-- Submit button -->
+						<button type="submit" data-mdb-button-init data-mdb-ripple-init
+							class="btn btn-primary btn-block">Edit Task</button>
+					</form>
+				</div>
+			</div>
+
+			<script>
+				document.addEventListener("DOMContentLoaded", () => {
+					const editButton = document.querySelectorAll(".edit-task-btn");
+					const taskNameInput = document.getElementById("task-name");
+					const taskStatusInput = document.getElementById("task-status");
+					const taskStartDateInput = document.getElementById("task-start-date");
+					const taskDueDateInput = document.getElementById("task-due-date");
+					const editTaskForm = document.getElementById("editTaskForm");
+
+					editButton.forEach(button => {
+						button.addEventListener("click", () => {
+							const taskId = button.getAttribute("data-task-id");
+							console.log(taskId);
+							fetch(`/task/${taskId}`)
+								.then(response => response.json())
+								.then(task => {
+									taskNameInput.value = task.task_name;
+									taskStatusInput.value = task.task_status;
+									taskStartDateInput.value = task.start_date;
+									taskDueDateInput.value = task.due_date;
+									editTaskForm.setAttribute("action", `/update/${task.task_id}`);
+								})
+								.catch(error => console.error("Error fetching task: ", error));
+						});
+					});
+				});
+
+
+				$(document).ready(function () {
+					$("#searchBox").on("keyup", function () {
+						var value = $(this).val().toLowerCase();
+						$("#myTable tr").filter(function () {
+							$(this).toggle($(this).find("td:first").text().toLowerCase().indexOf(value) > -1)
+						});
+					});
+				});
+			</script>
+			<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+				integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+				crossorigin="anonymous"></script>
+
+</body>
+
+</html>
