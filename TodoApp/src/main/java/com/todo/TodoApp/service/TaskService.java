@@ -8,8 +8,6 @@ public interface TaskService {
 	
 	public List<Task> getAllTask();
 	
-//	public List<Task> getTaskByStatus(int status);
-	
 	public void addTask(Task task);
 	
 	public void updateTask(Task task);

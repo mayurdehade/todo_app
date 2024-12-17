@@ -21,7 +21,7 @@
 		}
 
 		.task-status-col {
-			width: 13%;
+			width: 20%;
 		}
 
 		.task-date-col {
@@ -58,6 +58,11 @@
 		.nav-container h5 {
 			padding-left: 30px;
 			font-size: 25px;
+			width: 20%;
+		}
+
+		.nav-container button {
+			width: 20%;
 		}
 
 		#checkboxLabel {
@@ -75,26 +80,24 @@
 </head>
 
 <body>
-	<div class="card main-card">
+	<div>
 		<div class="nav-container">
-			<h5 class="mb-0 text-center">To-Do Web App</h5>
-			<div class="search-box-div">
-				<input class="form-control" id="searchBox" type="text" placeholder="Search Task..">
-				<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModel">
-					Add Task
-				</button>
-			</div>
+			<h5 class="mb-0 text-center">To-Do</h5>
+			<input class="form-control" id="searchBox" type="text" placeholder="Search Task..">
+			<button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addTaskModel">
+				Add Task
+			</button>
 		</div>
-		<div class="card-body card-body-div" data-mdb-perfect-scrollbar="true">
+		<div class="card-body-div" data-mdb-perfect-scrollbar="true">
 			<div class="container">
 				<table class="table">
 					<thead>
 						<tr>
-							<th scope="col" class="task-name-col">Task Name
-								<input type="checkbox" id="validCheckbox" />
-								<label for="validUniqueCheckbox" id="checkboxLabel">Show Unique</label>
+							<th scope="col" class="task-name-col">Task Name</th>
+							<th scope="col" class="task-status-col">Status
+								<input type="checkbox" id="hideCompleted" />
+								<label for="hideCompleted" id="checkboxLabel">Hide Completed</label>
 							</th>
-							<th scope="col" class="task-status-col">Status</th>
 							<th scope="col" class="task-date-col">Start Date</th>
 							<th scope="col" class="task-date-col">Due Date</th>
 							<th scope="col" class="task-action-col">Action</th>
@@ -103,7 +106,7 @@
 					<tbody id="myTable">
 						<tr th:each="task : ${allTasks}">
 							<td scope="row" th:text="${task.task_name}" class="task-name"></td>
-							<td th:switch="${task.task_status}">
+							<td th:switch="${task.task_status}" class="task-status-col">
 								<span th:case="0">New</span>
 								<span th:case="1">Under Process</span>
 								<span th:case="2">Completed</span>
@@ -144,7 +147,7 @@
 							<label class="form-label" for="taskName">Task Name: </label>
 							<input type="text" id="taskName" name="task_name" class="form-control" required />
 							<div class="invalid-feedback" id="invalid_name">
-								Task Name should not be empty or spaces only.
+								Task name must be unique and cannot be empty.
 							</div>
 						</div>
 
@@ -192,7 +195,7 @@
 							<label class="form-label" for="task-name">Task Name: </label>
 							<input type="text" id="task-name" name="task_name" class="form-control" required />
 							<div class="invalid-feedback" id="invalid_name2">
-								Task Name should not be empty or spaces only.
+								Task name must be unique and cannot be empty.
 							</div>
 						</div>
 
@@ -219,7 +222,7 @@
 						<div class="error" id="dateError2">Start Date must be less than or equal to Due Date.</div>
 
 						<button type="submit" data-mdb-button-init data-mdb-ripple-init
-							class="btn btn-primary btn-block">Edit Task</button>
+							class="btn btn-primary btn-block">Save</button>
 					</form>
 				</div>
 
@@ -249,17 +252,6 @@
 						});
 					});
 
-
-					//table serach filter
-					$(document).ready(function () {
-						$("#searchBox").on("keyup", function () {
-							var value = $(this).val().toLowerCase();
-							$("#myTable tr").filter(function () {
-								$(this).toggle($(this).find("td:first").text().toLowerCase().indexOf(value) > -1)
-							});
-						});
-					});
-
 					document.addEventListener("DOMContentLoaded", () => {
 						const addTaskForm = document.querySelector("#addTaskModel form");
 						const editTaskForm = document.querySelector("#editTaskModel form");
@@ -271,10 +263,19 @@
 						const taskDueDateInput = document.getElementById("task-due-date");
 						const dateError1 = document.getElementById("dateError1");
 						const dateError2 = document.getElementById("dateError2");
+						const taskNameEditInput = document.getElementById("task-name");
+						const invalidEditNameMsg = document.getElementById("invalid_name2");
+						
+						const existingTasks = Array.from(document.querySelectorAll(".task-name"))
+							.map(task => task.textContent.trim().toLowerCase());
+						
+						let isDuplicated = false;
 
 						// Validate Add Task Form
 						addTaskForm.addEventListener("submit", (e) => {
-							if (taskNameInput.value.trim() === "") {
+							isDuplicated = false;
+							checkDuplicated(existingTasks, taskNameInput.value.trim());
+							if (taskNameInput.value.trim() === "" || isDuplicated) {
 								e.preventDefault();
 								invalidNameMsg.style.display = "block";
 								taskNameInput.classList.add("is-invalid");
@@ -286,10 +287,9 @@
 
 						// Validate Edit Task Form
 						editTaskForm.addEventListener("submit", (e) => {
-							const taskNameEditInput = document.getElementById("task-name");
-							const invalidEditNameMsg = document.getElementById("invalid_name2");
-
-							if (taskNameEditInput.value.trim() === "") {
+							isDuplicated = false;
+							checkDuplicated(existingTasks, taskNameEditInput.value.trim());
+							if (taskNameEditInput.value.trim() === "" || isDuplicated) {
 								e.preventDefault();
 								invalidEditNameMsg.style.display = "block";
 								taskNameEditInput.classList.add("is-invalid");
@@ -299,29 +299,32 @@
 							}
 						});
 
-
-						const validCheckbox = document.getElementById("validCheckbox");
-
-						validCheckbox.addEventListener("change", () => {
-							const rows = document.querySelectorAll("#myTable tr");
-							const taskNames = new Set();
-
-							rows.forEach(row => {
-								const taskNameCell = row.querySelector(".task-name");
-								const taskName = taskNameCell ? taskNameCell.textContent.trim() : "";
-
-								if (validCheckbox.checked) {
-									if (taskName == "" || taskNames.has(taskName)) {
-										row.style.display = "none";
-									} else {
-										taskNames.add(taskName);
-										row.style.display = "";
-									}
-								} else {
-									row.style.display = "";
+						function checkDuplicated(namesArr, formName) {
+							namesArr.forEach(name => {
+								if(name.toLowerCase() === formName.toLowerCase()) {
+									isDuplicated = true;
 								}
 							})
-						});
+						};
+
+						//checkbox validation (hide completed)
+						const hideCompleted = document.getElementById("hideCompleted");
+
+						let isChecked = localStorage.getItem("isChecked");
+
+						if (isChecked === "true") {
+							isChecked = true;
+						} else {
+							isChecked = false;
+						}
+
+						hideCompleted.checked = isChecked;
+
+						toggleCompleted();
+
+						hideCompleted.addEventListener("change", toggleCompleted);
+
+
 
 						//date validation
 						addTaskForm.addEventListener("submit", (event) => {
@@ -357,6 +360,39 @@
 						}
 
 					});
+
+					//table serach filter
+					$(document).ready(function () {
+						$("#searchBox").on("keyup", function () {
+							var value = $(this).val().toLowerCase();
+							$("#myTable tr").filter(function () {
+								$(this).toggle($(this).find("td:first").text().toLowerCase().indexOf(value) > -1);
+							});
+						});
+					});
+
+
+					function toggleCompleted() {
+						const rows = document.querySelectorAll("#myTable tr");
+
+						rows.forEach(row => {
+							const taskStatusCell = row.querySelector(".task-status-col");
+							const taskStatus = taskStatusCell ? taskStatusCell.textContent.trim() : "";
+
+							isChecked = hideCompleted.checked;
+							localStorage.setItem("isChecked", isChecked);
+							if (isChecked) {
+								if (taskStatus == 2 || taskStatus == "Completed") {
+									row.style.display = "none";
+								} else {
+									row.style.display = "";
+								}
+							} else {
+								row.style.display = "";
+							}
+						});
+					}
+
 
 				</script>
 				<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
